@@ -1,9 +1,12 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
 import winsound
 import keyboard
 from decimal import Decimal
 import math
+import matplotlib.pyplot as plt
+import numpy as np
 
 root = Tk()
 root.geometry("390x377")
@@ -28,18 +31,22 @@ dark_mode_colors = {
 # Na początku jasny
 current_colors = light_mode_colors
 
-messagebox.showinfo("Witaj!", "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł.")
+messagebox.showinfo("Witaj!", "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł. Potrafi też rysować podstawowy wykres funkcji liniowej, aby otworzyć okno funkcji liniowej należy nacisnąć P.")
 expression = ""
 input_text = StringVar()
+is_plot_window_open = False  # Flaga dla nowego okna
+
 def show_info():
     messagebox.showinfo("Witaj!",
-                        "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł.")
+                        "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł. Potrafi też rysować podstawowy wykres funkcji liniowej, aby otworzyć okno funkcji liniowej należy nacisnąć P.")
+
 def play_sound():
     winsound.PlaySound("klik.wav", winsound.SND_ASYNC)
 
-
 def btn_click(item):
-    global expression
+    global expression, is_plot_window_open
+    if is_plot_window_open:
+        return
     if len(expression) > 0 and expression[-1] in ['+', '-', '*', '/', '.']:
         if item in ['+', '-', '*', '/', '.']:
             return
@@ -49,19 +56,25 @@ def btn_click(item):
     play_sound()
 
 def btn_backspace():
-    global expression
+    global expression, is_plot_window_open
+    if is_plot_window_open:
+        return
     expression = expression[:-1]
     input_text.set(expression)
     play_sound()
 
 def btn_clear():
-    global expression
+    global expression, is_plot_window_open
+    if is_plot_window_open:
+        return
     expression = ""
     input_text.set("")
     play_sound()
 
 def btn_equal():
-    global expression
+    global expression, is_plot_window_open
+    if is_plot_window_open:
+        return
     try:
         expression_decimal = expression.replace('+', ' + ').replace('-', ' - ').replace('*', ' * ').replace('/', ' / ')
         parts = expression_decimal.split()
@@ -109,7 +122,9 @@ def to_binary_znak_modul(decimal_num, num_bits):
     return binary_num
 
 def convert_to_u2():
-    global expression
+    global expression, is_plot_window_open
+    if is_plot_window_open:
+        return
     try:
         decimal_num = eval(expression)
         binary_u2 = to_binary_u2(decimal_num, 8)  # wynik w 8 bitach
@@ -122,7 +137,9 @@ def convert_to_u2():
         play_sound()
 
 def convert_to_znak_modul():
-    global expression
+    global expression, is_plot_window_open
+    if is_plot_window_open:
+        return
     try:
         decimal_num = eval(expression)
         binary_znak_modul = to_binary_znak_modul(decimal_num, 8)  # wynik w 8 bitach
@@ -135,7 +152,9 @@ def convert_to_znak_modul():
         play_sound()
 
 def toggle_mode():
-    global current_colors
+    global current_colors, is_plot_window_open
+    if is_plot_window_open:
+        return
     if current_colors == light_mode_colors:
         current_colors = dark_mode_colors
         play_sound()
@@ -151,7 +170,9 @@ def apply_color_scheme():
             widget.configure(bg=current_colors["btn_bg"], fg=current_colors["btn_fg"])
 
 def calculate_sqrt():
-    global expression
+    global expression, is_plot_window_open
+    if is_plot_window_open:
+        return
     try:
         result = str(math.sqrt(eval(expression)))
         input_text.set(result)
@@ -161,6 +182,54 @@ def calculate_sqrt():
         input_text.set("Błąd")
         expression = ""
         play_sound()
+
+def plot_linear_function():
+    try:
+        m = float(m_entry.get())
+        b = float(b_entry.get())
+        x = np.linspace(-10, 10, 400)
+        y = m * x + b
+        plt.figure(figsize=(8, 6))
+        plt.plot(x, y, '-r')
+        plt.title(f'Wykres funkcji liniowej: y = {m}x + {b}')
+        plt.xlabel('x', color='#1C2833')
+        plt.ylabel('y', color='#1C2833')
+        plt.grid()
+        plt.axhline(0, color='black',linewidth=0.5)
+        plt.axvline(0, color='black',linewidth=0.5)
+        plt.show()
+        play_sound()
+    except Exception as e:
+        messagebox.showerror("Błąd", "Wprowadź prawidłowe wartości dla m i b")
+
+def open_plot_window():
+    global plot_window, m_entry, b_entry, is_plot_window_open
+    if is_plot_window_open:
+        return
+    is_plot_window_open = True
+    plot_window = Toplevel(root)
+    plot_window.title("Wykres funkcji liniowej")
+    plot_window.geometry("300x200")
+    plot_window.resizable(0, 0)
+    plot_window.protocol("WM_DELETE_WINDOW", on_plot_window_close)
+
+    m_label = Label(plot_window, text="Współczynnik m:", font=('arial', 12))
+    m_label.pack(pady=5)
+    m_entry = Entry(plot_window, font=('arial', 12))
+    m_entry.pack(pady=5)
+
+    b_label = Label(plot_window, text="Wyraz wolny b:", font=('arial', 12))
+    b_label.pack(pady=5)
+    b_entry = Entry(plot_window, font=('arial', 12))
+    b_entry.pack(pady=5)
+
+    plot_button = Button(plot_window, text="Pokaż wykres", font=('arial', 12), command=plot_linear_function)
+    plot_button.pack(pady=20)
+
+def on_plot_window_close():
+    global is_plot_window_open
+    is_plot_window_open = False
+    plot_window.destroy()
 
 keyboard.add_hotkey('1', lambda: btn_click(1))
 keyboard.add_hotkey('2', lambda: btn_click(2))
@@ -172,12 +241,10 @@ keyboard.add_hotkey('7', lambda: btn_click(7))
 keyboard.add_hotkey('8', lambda: btn_click(8))
 keyboard.add_hotkey('9', lambda: btn_click(9))
 keyboard.add_hotkey('0', lambda: btn_click(0))
-keyboard.add_hotkey('.', lambda: btn_click("."))
-keyboard.add_hotkey(',', lambda: btn_click("."))
-keyboard.add_hotkey('/', lambda: btn_click("/"))
-keyboard.add_hotkey('*', lambda: btn_click("*"))
-keyboard.add_hotkey('-', lambda: btn_click("-"))
-keyboard.add_hotkey('+', lambda: btn_click("+"))
+keyboard.add_hotkey('+', lambda: btn_click('+'))
+keyboard.add_hotkey('-', lambda: btn_click('-'))
+keyboard.add_hotkey('*', lambda: btn_click('*'))
+keyboard.add_hotkey('/', lambda: btn_click('/'))
 keyboard.add_hotkey('Enter', lambda: btn_equal())
 keyboard.add_hotkey('Backspace', lambda: btn_backspace())
 keyboard.add_hotkey('C', lambda: btn_clear())
@@ -186,6 +253,7 @@ keyboard.add_hotkey('Ctrl+2', lambda: convert_to_u2())
 keyboard.add_hotkey('S', lambda: calculate_sqrt())
 keyboard.add_hotkey('(', lambda: btn_click("("))
 keyboard.add_hotkey(')', lambda: btn_click(")"))
+keyboard.add_hotkey('P', lambda: open_plot_window())
 
 # Ramka do działań
 input_frame = Frame(root, width=312, height=50, bd=0, highlightbackground="black", highlightcolor="black", highlightthickness=1)
