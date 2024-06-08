@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 root = Tk()
-root.geometry("390x377")
+root.geometry("390x431")
 root.resizable(0, 0)
 root.title("KALKULATOR")
 
@@ -77,6 +77,7 @@ def btn_equal():
     if is_plot_window_open or is_quad_plot_window_open:
         return
     try:
+        # analiza ekspresji
         expression_decimal = expression.replace('+', ' + ').replace('-', ' - ').replace('*', ' * ').replace('/', ' / ')
         parts = expression_decimal.split()
         decimal_expression = ' '.join(['Decimal("' + part + '")' if part.replace('.', '', 1).isdigit() else part for part in parts])
@@ -184,6 +185,19 @@ def calculate_sqrt():
         expression = ""
         play_sound()
 
+def calculate_square():
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
+        return
+    try:
+        result = str(eval(expression) ** 2)
+        input_text.set(result)
+        expression = result
+        play_sound()
+    except Exception as e:
+        input_text.set("Błąd")
+        expression = ""
+        play_sound()
 def plot_linear_function():
     try:
         m = float(m_entry.get())
@@ -201,7 +215,7 @@ def plot_linear_function():
         plt.show()
         play_sound()
     except Exception as e:
-        messagebox.showerror("Błąd", "Wprowadź prawidłowe wartości dla m i b")
+        messagebox.showerror("Błąd", "Wprowadź prawidłowe wartości dla a i b")
 
 def open_plot_window():
     global plot_window, m_entry, b_entry, is_plot_window_open
@@ -214,7 +228,8 @@ def open_plot_window():
     plot_window.resizable(0, 0)
     plot_window.protocol("WM_DELETE_WINDOW", on_plot_window_close)
 
-    m_label = Label(plot_window, text="Współczynnik m:", font=('arial', 12))
+    # y = ax + b do wyświetlenia na górze
+    m_label = Label(plot_window, text="Współczynnik a:", font=('arial', 12))
     m_label.pack(pady=5)
     m_entry = Entry(plot_window, font=('arial', 12))
     m_entry.pack(pady=5)
@@ -285,6 +300,10 @@ def on_quad_plot_window_close():
     global is_quad_plot_window_open
     is_quad_plot_window_open = False
     quad_plot_window.destroy()
+
+# do dodania
+# obliczanie pól i obwodów figur geometrycznych
+# obliczanie pól powierzchni i objętości brył
 
 keyboard.add_hotkey('1', lambda: btn_click(1))
 keyboard.add_hotkey('2', lambda: btn_click(2))
@@ -388,5 +407,13 @@ equals.grid(row=4, column=3, columnspan=2, padx=1, pady=1)
 mode_toggle_btn = Button(btns_frame, text="Tryb ciemny", fg="black", width=10, height=3, bd=0, bg="#eee", cursor="hand2", command=toggle_mode)
 mode_toggle_btn.grid(row=0, column=0, padx=1, pady=1)
 
+linear = Button(btns_frame, text="Funkcja y=ax+b", fg="black", width=21, height=3, bd=0, bg="#eee", cursor="hand2", command=open_plot_window)
+linear.grid(row=7, column=0, padx=1, pady=1, columnspan=2)
+
+quad = Button(btns_frame, text="Funkcja y=ax^2+bx+c", fg="black", width=21, height=3, bd=0, bg="#eee", cursor="hand2", command=open_quad_plot_window)
+quad.grid(row=7, column=2, padx=1, pady=1, columnspan=2)
+
+square = Button(btns_frame, text="x^2", fg="black", width=10, height=3, bd=0, bg="#eee", cursor="hand2", command=calculate_square)
+square.grid(row=7, column=4, padx=1, pady=1)
 apply_color_scheme()
 root.mainloop()
