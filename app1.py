@@ -31,21 +31,22 @@ dark_mode_colors = {
 # Na początku jasny
 current_colors = light_mode_colors
 
-messagebox.showinfo("Witaj!", "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł. Potrafi też rysować podstawowy wykres funkcji liniowej, aby otworzyć okno funkcji liniowej należy nacisnąć P.")
+messagebox.showinfo("Witaj!", "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł. Potrafi też rysować podstawowy wykres funkcji liniowej oraz kwadratowej, aby otworzyć okno należy nacisnąć L (liniowa) lub K (kwadratowa).")
 expression = ""
 input_text = StringVar()
 is_plot_window_open = False  # Flaga dla nowego okna
+is_quad_plot_window_open = False  # Flaga dla okna funkcji kwadratowej
 
 def show_info():
     messagebox.showinfo("Witaj!",
-                        "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł. Potrafi też rysować podstawowy wykres funkcji liniowej, aby otworzyć okno funkcji liniowej należy nacisnąć P.")
+                        "To jest kalkulator, jest on w stanie wykonywać podstawowe obliczenia i przeliczać liczby na system binarny w kodzie U2 lub znak-moduł. Potrafi też rysować podstawowy wykres funkcji liniowej oraz kwadratowej, aby otworzyć okno należy nacisnąć L (liniowa) lub K (kwadratowa).")
 
 def play_sound():
     winsound.PlaySound("klik.wav", winsound.SND_ASYNC)
 
 def btn_click(item):
-    global expression, is_plot_window_open
-    if is_plot_window_open:
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     if len(expression) > 0 and expression[-1] in ['+', '-', '*', '/', '.']:
         if item in ['+', '-', '*', '/', '.']:
@@ -56,24 +57,24 @@ def btn_click(item):
     play_sound()
 
 def btn_backspace():
-    global expression, is_plot_window_open
-    if is_plot_window_open:
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     expression = expression[:-1]
     input_text.set(expression)
     play_sound()
 
 def btn_clear():
-    global expression, is_plot_window_open
-    if is_plot_window_open:
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     expression = ""
     input_text.set("")
     play_sound()
 
 def btn_equal():
-    global expression, is_plot_window_open
-    if is_plot_window_open:
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     try:
         expression_decimal = expression.replace('+', ' + ').replace('-', ' - ').replace('*', ' * ').replace('/', ' / ')
@@ -122,8 +123,8 @@ def to_binary_znak_modul(decimal_num, num_bits):
     return binary_num
 
 def convert_to_u2():
-    global expression, is_plot_window_open
-    if is_plot_window_open:
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     try:
         decimal_num = eval(expression)
@@ -137,8 +138,8 @@ def convert_to_u2():
         play_sound()
 
 def convert_to_znak_modul():
-    global expression, is_plot_window_open
-    if is_plot_window_open:
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     try:
         decimal_num = eval(expression)
@@ -152,8 +153,8 @@ def convert_to_znak_modul():
         play_sound()
 
 def toggle_mode():
-    global current_colors, is_plot_window_open
-    if is_plot_window_open:
+    global current_colors, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     if current_colors == light_mode_colors:
         current_colors = dark_mode_colors
@@ -170,8 +171,8 @@ def apply_color_scheme():
             widget.configure(bg=current_colors["btn_bg"], fg=current_colors["btn_fg"])
 
 def calculate_sqrt():
-    global expression, is_plot_window_open
-    if is_plot_window_open:
+    global expression, is_plot_window_open, is_quad_plot_window_open
+    if is_plot_window_open or is_quad_plot_window_open:
         return
     try:
         result = str(math.sqrt(eval(expression)))
@@ -223,13 +224,67 @@ def open_plot_window():
     b_entry = Entry(plot_window, font=('arial', 12))
     b_entry.pack(pady=5)
 
-    plot_button = Button(plot_window, text="Pokaż wykres", font=('arial', 12), command=plot_linear_function)
+    plot_button = Button(plot_window, text="Rysuj wykres", command=plot_linear_function, font=('arial', 12), bg=current_colors["btn_bg"], fg=current_colors["btn_fg"])
     plot_button.pack(pady=20)
+
+def plot_quadratic_function():
+    try:
+        a = float(a_entry.get())
+        b = float(b_entry.get())
+        c = float(c_entry.get())
+        x = np.linspace(-10, 10, 400)
+        y = a * x**2 + b * x + c
+        plt.figure(figsize=(8, 6))
+        plt.plot(x, y, '-b')
+        plt.title(f'Wykres funkcji kwadratowej: y = {a}x^2 + {b}x + {c}')
+        plt.xlabel('x', color='#1C2833')
+        plt.ylabel('y', color='#1C2833')
+        plt.grid()
+        plt.axhline(0, color='black',linewidth=0.5)
+        plt.axvline(0, color='black',linewidth=0.5)
+        plt.show()
+        play_sound()
+    except Exception as e:
+        messagebox.showerror("Błąd", "Wprowadź prawidłowe wartości dla a, b i c")
+
+def open_quad_plot_window():
+    global quad_plot_window, a_entry, b_entry, c_entry, is_quad_plot_window_open
+    if is_quad_plot_window_open:
+        return
+    is_quad_plot_window_open = True
+    quad_plot_window = Toplevel(root)
+    quad_plot_window.title("Wykres funkcji kwadratowej")
+    quad_plot_window.geometry("300x250")
+    quad_plot_window.resizable(0, 0)
+    quad_plot_window.protocol("WM_DELETE_WINDOW", on_quad_plot_window_close)
+
+    a_label = Label(quad_plot_window, text="Współczynnik a:", font=('arial', 12))
+    a_label.pack(pady=5)
+    a_entry = Entry(quad_plot_window, font=('arial', 12))
+    a_entry.pack(pady=5)
+
+    b_label = Label(quad_plot_window, text="Współczynnik b:", font=('arial', 12))
+    b_label.pack(pady=5)
+    b_entry = Entry(quad_plot_window, font=('arial', 12))
+    b_entry.pack(pady=5)
+
+    c_label = Label(quad_plot_window, text="Wyraz wolny c:", font=('arial', 12))
+    c_label.pack(pady=5)
+    c_entry = Entry(quad_plot_window, font=('arial', 12))
+    c_entry.pack(pady=5)
+
+    plot_button = Button(quad_plot_window, text="Rysuj wykres", command=plot_quadratic_function, font=('arial', 12), bg=current_colors["btn_bg"], fg=current_colors["btn_fg"])
+    plot_button.pack(pady=15)
 
 def on_plot_window_close():
     global is_plot_window_open
     is_plot_window_open = False
     plot_window.destroy()
+
+def on_quad_plot_window_close():
+    global is_quad_plot_window_open
+    is_quad_plot_window_open = False
+    quad_plot_window.destroy()
 
 keyboard.add_hotkey('1', lambda: btn_click(1))
 keyboard.add_hotkey('2', lambda: btn_click(2))
@@ -253,7 +308,8 @@ keyboard.add_hotkey('Ctrl+2', lambda: convert_to_u2())
 keyboard.add_hotkey('S', lambda: calculate_sqrt())
 keyboard.add_hotkey('(', lambda: btn_click("("))
 keyboard.add_hotkey(')', lambda: btn_click(")"))
-keyboard.add_hotkey('P', lambda: open_plot_window())
+keyboard.add_hotkey('L', lambda: open_plot_window())
+keyboard.add_hotkey('K', open_quad_plot_window)
 
 # Ramka do działań
 input_frame = Frame(root, width=312, height=50, bd=0, highlightbackground="black", highlightcolor="black", highlightthickness=1)
