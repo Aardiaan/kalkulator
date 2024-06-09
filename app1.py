@@ -10,7 +10,7 @@ import numpy as np
 
 root = Tk()
 root.geometry("390x431")
-root.resizable(0, 0)
+root.resizable(False, False)
 root.title("KALKULATOR")
 
 # Kolory do trybów
@@ -204,14 +204,22 @@ def plot_linear_function():
         b = float(b_entry.get())
         x = np.linspace(-10, 10, 400)
         y = m * x + b
-        plt.figure(figsize=(8, 6))
-        plt.plot(x, y, '-r')
-        plt.title(f'Wykres funkcji liniowej: y = {m}x + {b}')
-        plt.xlabel('x', color='#1C2833')
-        plt.ylabel('y', color='#1C2833')
-        plt.grid()
-        plt.axhline(0, color='black',linewidth=0.5)
-        plt.axvline(0, color='black',linewidth=0.5)
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        ax.plot(x, y, '-r')
+        ax.set_title(f'Wykres funkcji liniowej: y = {m}x + {b}')
+        ax.set_xlabel('x', color='#1C2833')
+        ax.set_ylabel('y', color='#1C2833')
+        ax.grid()
+        ax.axhline(0, color='black', linewidth=0.5)
+        ax.axvline(0, color='black', linewidth=0.5)
+
+        if m != 0:
+            zero_x = -b / m
+            # Dodanie tekstu z miejscem zerowym w rogu wykresu
+            textstr = f'Miejsce zerowe: x = {zero_x:.2f}'
+            plt.gcf().text(0.15, 0.8, textstr, fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
+
         plt.show()
         play_sound()
     except Exception as e:
@@ -225,7 +233,7 @@ def open_plot_window():
     plot_window = Toplevel(root)
     plot_window.title("Wykres funkcji liniowej")
     plot_window.geometry("300x200")
-    plot_window.resizable(0, 0)
+    plot_window.resizable(False, False)
     plot_window.protocol("WM_DELETE_WINDOW", on_plot_window_close)
 
     # y = ax + b do wyświetlenia na górze
@@ -242,21 +250,42 @@ def open_plot_window():
     plot_button = Button(plot_window, text="Rysuj wykres", command=plot_linear_function, font=('arial', 12), bg=current_colors["btn_bg"], fg=current_colors["btn_fg"])
     plot_button.pack(pady=20)
 
+
 def plot_quadratic_function():
     try:
         a = float(a_entry.get())
         b = float(b_entry.get())
         c = float(c_entry.get())
         x = np.linspace(-10, 10, 400)
-        y = a * x**2 + b * x + c
+        y = a * x ** 2 + b * x + c
+
+        # Calculate discriminant (delta)
+        delta = b ** 2 - 4 * a * c
+
+        # Determine the roots
+        if delta > 0:
+            root1 = (-b + math.sqrt(delta)) / (2 * a)
+            root2 = (-b - math.sqrt(delta)) / (2 * a)
+            roots = f"Miejsca zerowe: x1 = {root1:.2f}, x2 = {root2:.2f}"
+        elif delta == 0:
+            root = -b / (2 * a)
+            roots = f"Miejsce zerowe: x = {root:.2f}"
+        else:
+            roots = "Brak miejsc zerowych"
+
         plt.figure(figsize=(8, 6))
         plt.plot(x, y, '-b')
         plt.title(f'Wykres funkcji kwadratowej: y = {a}x^2 + {b}x + {c}')
         plt.xlabel('x', color='#1C2833')
         plt.ylabel('y', color='#1C2833')
         plt.grid()
-        plt.axhline(0, color='black',linewidth=0.5)
-        plt.axvline(0, color='black',linewidth=0.5)
+        plt.axhline(0, color='black', linewidth=0.5)
+        plt.axvline(0, color='black', linewidth=0.5)
+
+        # Add text for delta and roots
+        textstr = f'Delta: {delta:.2f}\n{roots}'
+        plt.gcf().text(0.15, 0.8, textstr, fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
+
         plt.show()
         play_sound()
     except Exception as e:
@@ -270,7 +299,7 @@ def open_quad_plot_window():
     quad_plot_window = Toplevel(root)
     quad_plot_window.title("Wykres funkcji kwadratowej")
     quad_plot_window.geometry("300x250")
-    quad_plot_window.resizable(0, 0)
+    quad_plot_window.resizable(False, False)
     quad_plot_window.protocol("WM_DELETE_WINDOW", on_quad_plot_window_close)
 
     a_label = Label(quad_plot_window, text="Współczynnik a:", font=('arial', 12))
